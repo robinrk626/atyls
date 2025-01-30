@@ -15,7 +15,6 @@ class Products:
           fileData = json.load(file)
       except (FileNotFoundError, json.JSONDecodeError):
         fileData = []
-      print(products)
       fileData.extend([item.to_dict() for item in products])
 
       with open(filePath, 'w') as file:
@@ -25,16 +24,15 @@ class Products:
     except Exception as e:
       print(f"Error: {e}")
   
-  def saveProductImage(imagePath: str, imageName: str) -> str:
+  def saveProductImage(imageUrl: str, imageName: str) -> str:
     try:
       folder = Settings.imageFolder
       os.makedirs(folder,exist_ok = True)
-      response = requests.get(imagePath, stream = True)
+      response = requests.get(imageUrl, stream = True)
       response.raise_for_status()
       imagePath = os.path.join(folder, imageName)
       with open(imagePath, 'wb') as file:
-        for chunk in response.iter_content(1024):
-          file.write(chunk)
+        file.write(response.content)
       return imagePath
     except:
       print('Failed to save image in folder')

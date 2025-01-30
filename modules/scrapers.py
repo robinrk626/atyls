@@ -72,15 +72,15 @@ class Scrapers:
         price = str('-0.0' if len(price) == 0 else price[0])
         imageUrl = productItem.find('div', class_='mf-product-thumbnail').find('a').find('img')['data-lazy-src']
         redisKey = "product_" + title.replace(' ', '_')
-        cachedPrice = self.redis.getKey(redisKey)
+        cachedPrice = self.redis.getKey(redisKey).decode("utf-8")
         if cachedPrice == price:
           continue
         if cachedPrice == None:
           scrapResponse['newProducts'] += 1
         else:
           scrapResponse['updatedProducts'] += 1
-        imagePath = self.saveImage(imagePath = imageUrl, imageName = title)
-        self.redis.setKey(redisKey, price, 10)
+        imagePath = self.saveImage(imageUrl = imageUrl, imageName = title)
+        self.redis.setKey(redisKey, price, 3600)
         productItems.append(ProductModel(productTitle = title,productPrice = float(price),imagePath = imagePath))
     except:
       time.sleep(5)
