@@ -3,8 +3,6 @@ requests==2.32.3
 typing_extensions==4.12.2
 pydantic==2.10.4
 pydantic_core==2.27.2
-boto3==1.28.57
-
 async-timeout==5.0.1
 beautifulsoup4==4.12.3
 annotated-types==0.7.0
