@@ -17,6 +17,11 @@ class Scrapers:
     self.saveProducts = saveProducts
     self.requestSession = requests.session()
     self.saveImage = saveImage
+    if settings.proxy:
+      self.requestSession.proxies = {
+        "http": settings.proxy,
+        "https": settings.proxy,
+      }
   
   def getChallengeId(self, siteUrl: str) -> str:
     try:
@@ -54,8 +59,14 @@ class Scrapers:
         "Cookie": cookie,
         "user-agent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
       }
-      response = self.requestSession.get(siteUrl, headers = headers)
-      return response.text
+      maxRetries = 5
+      while maxRetries:
+        response = self.requestSession.get(siteUrl, headers = headers)
+        if response.status_code == 200:
+          return response.text
+        maxRetries -= 1
+        time.sleep(2)
+      return ''
     except:
       return ''
   
@@ -72,7 +83,9 @@ class Scrapers:
         price = str('-0.0' if len(price) == 0 else price[0])
         imageUrl = productItem.find('div', class_='mf-product-thumbnail').find('a').find('img')['data-lazy-src']
         redisKey = "product_" + title.replace(' ', '_')
-        cachedPrice = self.redis.getKey(redisKey).decode("utf-8")
+        cachedPrice = self.redis.getKey(redisKey)
+        if cachedPrice is not None:
+          cachedPrice = cachedPrice.decode("utf-8")
         if cachedPrice == price:
           continue
         if cachedPrice == None:
@@ -83,7 +96,6 @@ class Scrapers:
         self.redis.setKey(redisKey, price, 3600)
         productItems.append(ProductModel(productTitle = title,productPrice = float(price),imagePath = imagePath))
     except:
-      time.sleep(5)
       return
   
   def startScraping(self) -> dict:
